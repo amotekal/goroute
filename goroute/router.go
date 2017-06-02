@@ -1,8 +1,13 @@
 package goroute
 
+import (
+	"fmt"
+	"strings"
+)
+
 //Router is
 type Router struct {
-	tree map[string]*node
+	trees map[string]*node
 }
 
 //New is
@@ -12,14 +17,20 @@ func New() *Router {
 
 //Handle is
 func (r *Router) Handle(method, path string) {
-	if r.tree == nil {
-		r.tree = make(map[string]*node)
+	if path[0] != '/' {
+		panic("path must begit with '/' in path'" + path + "'")
 	}
 
-	root := r.tree[method]
+	path = strings.TrimPrefix(path, "/")
+
+	if r.trees == nil {
+		r.trees = make(map[string]*node)
+	}
+
+	root := r.trees[method]
 	if root == nil {
 		root = new(node)
-		r.tree[method] = root
+		r.trees[method] = root
 	}
 
 	root.insert(path)
@@ -32,7 +43,8 @@ func (r *Router) Get(path string) {
 
 //PrintTrees is
 func (r *Router) PrintTrees() {
-	for _, t := range r.tree {
-		t.printTrie("")
+	for method, tree := range r.trees {
+		fmt.Println(method)
+		tree.printTrie("")
 	}
 }
