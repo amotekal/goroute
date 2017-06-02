@@ -19,7 +19,7 @@ const (
 type node struct {
 	path string
 
-	children map[string]node
+	children map[string]*node
 
 	wildChild *node
 
@@ -29,26 +29,29 @@ type node struct {
 }
 
 //Insert a new path into the trie
-func (node *node) Insert(path string) error {
+func (n *node) insert(path string) error {
 	parts := strings.Split(path, "/")
-	curr := node
+	curr := n
 
 	for _, part := range parts {
-		if n, contains := curr.children[part]; contains {
-			curr = &n
+		if n.path == "" {
+			n.path = part
+			n.nodeType = static
+		} else if next, contains := curr.children[part]; contains {
+			curr = next
 		} else {
 			newNode := new(node)
 			curr.children[part] = newNode
-			curr = &newNode
+			curr = newNode
 		}
 	}
 	return nil
 }
 
 //PrintTrie prints the trie to standard out
-func (node *node) PrintTrie(depth string) {
-	fmt.Println(depth + node.path)
-	for _, n := range node.children {
-		n.PrintTrie(depth + " ")
+func (n *node) printTrie(depth string) {
+	fmt.Println(depth + n.path)
+	for _, next := range n.children {
+		next.printTrie(depth + " ")
 	}
 }
