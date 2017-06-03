@@ -2,7 +2,6 @@ package goroute
 
 import (
 	"fmt"
-	"strings"
 )
 
 //Router is
@@ -20,8 +19,6 @@ func (r *Router) Handle(method, path string) {
 	if path[0] != '/' {
 		panic("path must begit with '/' in path'" + path + "'")
 	}
-
-	path = strings.TrimPrefix(path, "/")
 
 	if r.trees == nil {
 		r.trees = make(map[string]*node)
@@ -46,5 +43,23 @@ func (r *Router) PrintTrees() {
 	for method, tree := range r.trees {
 		fmt.Println(method)
 		tree.printTrie("")
+	}
+}
+
+//Call is
+func (r *Router) Call(method string, path string) {
+	if root := r.trees[method]; root != nil {
+		params, success := root.search(path)
+
+		if success {
+			fmt.Println("success finding " + path)
+			if params != nil {
+				for param, value := range params {
+					fmt.Println(param + " : " + value)
+				}
+			}
+		} else {
+			fmt.Println("failed to find " + path)
+		}
 	}
 }

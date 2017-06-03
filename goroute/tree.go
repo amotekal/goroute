@@ -32,7 +32,7 @@ type node struct {
 
 //Insert a new path into the trie
 func (n *node) insert(path string) error {
-
+	path = strings.TrimPrefix(path, "/")
 	parts := strings.Split(path, "/")
 	curr := n
 
@@ -79,4 +79,26 @@ func (n *node) printTrie(depth string) {
 		fmt.Println(depth + n.wildChild.path)
 		n.wildChild.printTrie(depth + " ")
 	}
+}
+
+func (n *node) search(path string) (params map[string]string, success bool) {
+	path = strings.TrimPrefix(path, "/")
+	parts := strings.Split(path, "/")
+	curr := n
+	for _, part := range parts {
+		if next, contains := curr.children[part]; contains {
+			curr = next
+		} else if curr.wildChild != nil {
+			curr = curr.wildChild
+			if params == nil {
+				params = make(map[string]string)
+			}
+			params[curr.path] = part
+		} else {
+			success = false
+			return
+		}
+	}
+	success = true
+	return
 }

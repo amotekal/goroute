@@ -12,7 +12,13 @@ func main() {
 	router.Get("/armin/xun")
 	router.Get("/armin/bob/:id")
 	router.Get("/armin/bob/:id/zoo")
+	router.Get("/armin/bob/noob")
+	router.Get("/armin/bob/noob/:name")
 
-	router.PrintTrees()
+	//router.PrintTrees()
+
+	router.Call("GET", "/bob/armin")
+	router.Call("GET", "/armin/bob/5/zoo")
+	router.Call("GET", "/armin/bob/noob/xun")
 
 }
