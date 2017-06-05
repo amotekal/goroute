@@ -2,18 +2,23 @@ package goroute
 
 import (
 	"net/http"
+	"strings"
 )
 
 //Router is
 type Router struct {
 	trees map[string]*node
 
-	PanicHandler func(http.ResponseWriter, *http.Request, interface{})
+	PanicHandler    func(http.ResponseWriter, *http.Request, interface{})
+	NotFoundHandler http.HandlerFunc
+
+	IgnoreCase          bool
+	IgnoreTrailingSlash bool
 }
 
 //New is
 func New() *Router {
-	return &Router{}
+	return &Router{IgnoreCase: true, IgnoreTrailingSlash: true}
 }
 
 //Handle is
@@ -91,6 +96,32 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 			}
 
 			handle(w, req)
+		} else if r.IgnoreCase || r.IgnoreTrailingSlash {
+			if r.IgnoreTrailingSlash {
+				path = strings.TrimSuffix("/", path)
+			}
+			if r.IgnoreCase {
+				if handle, params, success := root.searchIgnoreCase(path); success {
+					for key, val := range params {
+						addParam(req, key, val)
+					}
+					handle(w, req)
+				}
+			} else {
+				if handle, params, success := root.search(path); success {
+					for key, val := range params {
+						addParam(req, key, val)
+					}
+					handle(w, req)
+				}
+			}
+
+		} else {
+			if r.NotFoundHandler != nil {
+				r.NotFoundHandler(w, req)
+			} else {
+				http.NotFound(w, req)
+			}
 		}
 		return
 	}

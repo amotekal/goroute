@@ -83,6 +83,38 @@ func (n *node) printTrie(depth string) {
 	}
 }
 
+func (n *node) searchIgnoreCase(path string) (handle http.HandlerFunc, params map[string]string, success bool) {
+	path = strings.TrimPrefix(path, "/")
+	parts := strings.Split(path, "/")
+	curr := n
+	if len(path) > 0 {
+	walk:
+		for _, part := range parts {
+			for path, next := range curr.children {
+				if strings.ToLower(path) == strings.ToLower(part) {
+					curr = next
+					continue walk
+				}
+			}
+
+			if curr.wildChild != nil {
+				curr = curr.wildChild
+				if params == nil {
+					params = make(map[string]string)
+				}
+				params[curr.path] = part
+				continue walk
+			}
+
+			success = false
+			return
+		}
+	}
+	handle = curr.handle
+	success = true
+	return
+}
+
 func (n *node) search(path string) (handle http.HandlerFunc, params map[string]string, success bool) {
 	path = strings.TrimPrefix(path, "/")
 	parts := strings.Split(path, "/")
