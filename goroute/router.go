@@ -2,11 +2,14 @@ package goroute
 
 import (
 	"fmt"
+	"net/http"
 )
 
 //Router is
 type Router struct {
 	trees map[string]*node
+
+	PanicHandler func(http.ResponseWriter, *http.Request, interface{})
 }
 
 //New is
@@ -15,7 +18,7 @@ func New() *Router {
 }
 
 //Handle is
-func (r *Router) Handle(method, path string) {
+func (r *Router) Handle(method, path string, handle http.HandlerFunc) {
 	if path[0] != '/' {
 		panic("path must begit with '/' in path'" + path + "'")
 	}
@@ -30,12 +33,12 @@ func (r *Router) Handle(method, path string) {
 		r.trees[method] = root
 	}
 
-	root.insert(path)
+	root.insert(path, handle)
 }
 
 //Get is
-func (r *Router) Get(path string) {
-	r.Handle("GET", path)
+func (r *Router) Get(path string, handle http.HandlerFunc) {
+	r.Handle("GET", path, handle)
 }
 
 //PrintTrees is
@@ -46,20 +49,28 @@ func (r *Router) PrintTrees() {
 	}
 }
 
-//Call is
-func (r *Router) Call(method string, path string) {
-	if root := r.trees[method]; root != nil {
-		params, success := root.search(path)
+func (r *Router) rcvr(w http.ResponseWriter, req *http.Request) {
+	if rcv := recover(); rcv != nil {
+		r.PanicHandler(w, req, rcv)
+	}
+}
 
-		if success {
-			fmt.Println("success finding " + path)
-			if params != nil {
-				for param, value := range params {
-					fmt.Println(param + " : " + value)
-				}
+//ServeHTTP implements http.handler
+func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	if r.PanicHandler != nil {
+		defer r.rcvr(w, req)
+	}
+
+	path := req.URL.Path
+
+	if root := r.trees[req.Method]; root != nil {
+		if handle, params, success := root.search(path); success {
+			for key, val := range params {
+				addParam(req, key, val)
 			}
-		} else {
-			fmt.Println("failed to find " + path)
+
+			handle(w, req)
 		}
+		return
 	}
 }

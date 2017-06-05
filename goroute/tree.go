@@ -27,11 +27,11 @@ type node struct {
 
 	nodeType
 
-	handle *http.HandlerFunc
+	handle http.HandlerFunc
 }
 
 //Insert a new path into the trie
-func (n *node) insert(path string) error {
+func (n *node) insert(path string, handle http.HandlerFunc) error {
 	path = strings.TrimPrefix(path, "/")
 	parts := strings.Split(path, "/")
 	curr := n
@@ -62,6 +62,7 @@ func (n *node) insert(path string) error {
 			curr = newNode
 		}
 	}
+	curr.handle = handle
 	return nil
 }
 
@@ -73,6 +74,7 @@ func isWild(path string) bool {
 func (n *node) printTrie(depth string) {
 	for path, next := range n.children {
 		fmt.Println(depth + path)
+		fmt.Println(n.children[path].handle)
 		next.printTrie(depth + " ")
 	}
 	if n.wildChild != nil {
@@ -81,7 +83,7 @@ func (n *node) printTrie(depth string) {
 	}
 }
 
-func (n *node) search(path string) (params map[string]string, success bool) {
+func (n *node) search(path string) (handle http.HandlerFunc, params map[string]string, success bool) {
 	path = strings.TrimPrefix(path, "/")
 	parts := strings.Split(path, "/")
 	curr := n
@@ -99,6 +101,7 @@ func (n *node) search(path string) (params map[string]string, success bool) {
 			return
 		}
 	}
+	handle = curr.handle
 	success = true
 	return
 }

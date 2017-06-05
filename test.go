@@ -1,24 +1,25 @@
 package main
 
 import (
+	"fmt"
 	"goroute/goroute"
+	"net/http"
 )
+
+func testhandle(w http.ResponseWriter, r *http.Request) {
+	id := goroute.Param(r, "id")
+	fmt.Fprintln(w, "hello world"+id)
+}
+
+func panichandler(w http.ResponseWriter, r *http.Request, rcv interface{}) {
+	fmt.Fprintln(w, rcv)
+}
 
 func main() {
 	router := goroute.New()
-
-	router.Get("/bob/armin")
-	router.Get("/bob/bill")
-	router.Get("/armin/xun")
-	router.Get("/armin/bob/:id")
-	router.Get("/armin/bob/:id/zoo")
-	router.Get("/armin/bob/noob")
-	router.Get("/armin/bob/noob/:name")
-
+	router.Get("/armin/bob/:id", testhandle)
+	router.PanicHandler = panichandler
 	//router.PrintTrees()
-
-	router.Call("GET", "/bob/armin")
-	router.Call("GET", "/armin/bob/5/zoo")
-	router.Call("GET", "/armin/bob/noob/xun")
+	http.ListenAndServe(":8080", router)
 
 }
