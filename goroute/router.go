@@ -1,7 +1,6 @@
 package goroute
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -36,17 +35,39 @@ func (r *Router) Handle(method, path string, handle http.HandlerFunc) {
 	root.insert(path, handle)
 }
 
-//Get is
+//Get creates a handler
 func (r *Router) Get(path string, handle http.HandlerFunc) {
 	r.Handle("GET", path, handle)
 }
 
-//PrintTrees is
-func (r *Router) PrintTrees() {
-	for method, tree := range r.trees {
-		fmt.Println(method)
-		tree.printTrie("")
-	}
+//Put creates a handler
+func (r *Router) Put(path string, handle http.HandlerFunc) {
+	r.Handle("PUT", path, handle)
+}
+
+//Post creates a handler
+func (r *Router) Post(path string, handle http.HandlerFunc) {
+	r.Handle("POST", path, handle)
+}
+
+//Patch creates a handler
+func (r *Router) Patch(path string, handle http.HandlerFunc) {
+	r.Handle("PATCH", path, handle)
+}
+
+//Delete creates a handler
+func (r *Router) Delete(path string, handle http.HandlerFunc) {
+	r.Handle("DELETE", path, handle)
+}
+
+//Options creates a handler
+func (r *Router) Options(path string, handle http.HandlerFunc) {
+	r.Handle("OPTIONS", path, handle)
+}
+
+//Head creates a handler
+func (r *Router) Head(path string, handle http.HandlerFunc) {
+	r.Handle("HEAD", path, handle)
 }
 
 func (r *Router) rcvr(w http.ResponseWriter, req *http.Request) {
